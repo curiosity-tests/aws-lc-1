@@ -31,142 +31,14 @@ jobs:
     env:
       AWS_LC_SSL_TEST_RUNNER_PEEK_ROUNDS: 100
     steps:
-      - name: Git clone the repository
-        uses: actions/checkout@v7
-      - name: Sanity Test Run
-        run: |
-          sudo apt-get update -o Acquire::Languages=none -o Acquire::Translation=none
-          sudo apt-get install ninja-build
-          cmake -GNinja -Btest_build_dir
-          ninja -C test_build_dir run_tests
-
-  macOS-x86:
-    if: github.repository_owner == 'aws'
-    needs: [sanity-test-run]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - "macos-15-intel"
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
-        with:
-          go-version: ">=1.18"
-      - name: Build ${{ env.PACKAGE_NAME }}
-        run: |
-          ./tests/ci/run_posix_tests.sh
-      - name: Test timing summary
-        if: always()
-        run: python3 tests/ci/test_results_summary.py "${{ github.workspace }}/gtest_reports" >> $GITHUB_STEP_SUMMARY
-
-  macOS-x86-FIPS:
-    if: github.repository_owner == 'aws'
-    needs: [sanity-test-run]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - "macos-15-intel"
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
-        with:
-          go-version: ">=1.18"
-      - name: Build ${{ env.PACKAGE_NAME }} with FIPS mode
-        run: |
-          ./tests/ci/run_fips_tests.sh
-      - name: Test timing summary
-        if: always()
-        run: python3 tests/ci/test_results_summary.py "${{ github.workspace }}/gtest_reports" >> $GITHUB_STEP_SUMMARY
-
-  macOS-ARM:
-    if: github.repository_owner == 'aws'
-    needs: [sanity-test-run]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - "macos-14"
-          - "macos-15"
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
-        with:
-          go-version: ">=1.18"
-      - name: Build ${{ env.PACKAGE_NAME }}
-        run: |
-          ./tests/ci/run_posix_tests.sh
-      - name: Test timing summary
-        if: always()
-        run: python3 tests/ci/test_results_summary.py "${{ github.workspace }}/gtest_reports" >> $GITHUB_STEP_SUMMARY
-
-  windows:
-    if: github.repository_owner == 'aws'
-    needs: [sanity-test-run]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - "windows-latest"
-          - "windows-11-arm"
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
-        with:
-          go-version: ">=1.18"
-      - name: Install NASM
-        if: "!endsWith(matrix.os, '-arm')"
-        uses: ilammy/setup-nasm@v1.5.1
-      - name: Build/Test (x64)
-        if: "!endsWith(matrix.os, '-arm')"
-        run: |
-          ./tests/ci/run_windows_tests.bat auto x64
-      - name: Build/Test (ARM64)
-        if: endsWith(matrix.os, '-arm')
-        run: |
-          ./tests/ci/run_windows_tests.bat auto arm64
-
-  macOS-ARM-FIPS:
-    if: github.repository_owner == 'aws'
-    needs: [sanity-test-run]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - "macos-14"
-          - "macos-15"
-        clang:
-          - 22
-          - 0 # default
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
-        with:
-          go-version: ">=1.18"
-      - if: matrix.clang == 22
-        run: |
-          brew install llvm@22
-          LLVM_PREFIX="$(brew --prefix llvm@22)"
-          echo "CC=${LLVM_PREFIX}/bin/clang" >> $GITHUB_ENV
-          echo "CXX=${LLVM_PREFIX}/bin/clang++" >> $GITHUB_ENV
-          echo "LDFLAGS=-L${LLVM_PREFIX}/lib/c++ -L${LLVM_PREFIX}/lib -lc++abi" >> $GITHUB_ENV
-          echo "CPPFLAGS=-I${LLVM_PREFIX}/include" >> $GITHUB_ENV
-          echo "CFLAGS=-I${LLVM_PREFIX}/include" >> $GITHUB_ENV
-          echo "CXXFLAGS=-I${LLVM_PREFIX}/include -stdlib=libc++" >> $GITHUB_ENV
-          echo "DYLD_LIBRARY_PATH=${LLVM_PREFIX}/lib" >> $GITHUB_ENV
-          echo "${LLVM_PREFIX}/bin" >> $GITHUB_PATH
-      - name: Build ${{ env.PACKAGE_NAME }} with FIPS mode
-        run: |
-          ./tests/ci/run_fips_tests.sh
-      - name: Test timing summary
-        if: always()
-        run: python3 tests/ci/test_results_summary.py "${{ github.workspace }}/gtest_reports" >> $GITHUB_STEP_SUMMARY
+    - name: Git clone the repository
+      uses: actions/checkout@v7
+    - name: Sanity Test Run
+      run: |
+        sudo apt-get update -o Acquire::Languages=none -o Acquire::Translation=none
+        sudo apt-get install ninja-build
+        cmake -GNinja -Btest_build_dir
+        ninja -C test_build_dir run_tests
 
   compiler-tests:
     name: >-
@@ -182,50 +54,50 @@ jobs:
         fips: [0, 1]
         shared: [0, 1]
         compiler:
-          - "gcc9"
-          - "gcc10"
-          - "gcc11"
-          - "gcc12"
-          - "gcc13"
-          - "gcc14"
-          - "gcc15"
-          - "gcc16"
-          - "clang14"
-          - "clang15"
-          - "clang16"
-          - "clang17"
-          - "clang18"
-          - "clang19"
-          - "clang20"
-          - "clang21"
-          - "clang22"
+        - "gcc9"
+        - "gcc10"
+        - "gcc11"
+        - "gcc12"
+        - "gcc13"
+        - "gcc14"
+        - "gcc15"
+        - "gcc16"
+        - "clang14"
+        - "clang15"
+        - "clang16"
+        - "clang17"
+        - "clang18"
+        - "clang19"
+        - "clang20"
+        - "clang21"
+        - "clang22"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/mattkretz/cplusplus-ci/${{ matrix.compiler }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
-        with:
-          go-version: ">=1.18"
-      - name: Setup Clang
-        if: startsWith(matrix.compiler, 'clang')
-        run: |
-          echo "CC=clang" >> $GITHUB_ENV
-          echo "CXX=clang++" >> $GITHUB_ENV
-      - name: Setup GCC
-        if: startsWith(matrix.compiler, 'gcc')
-        run: |
-          echo "CC=gcc" >> $GITHUB_ENV
-          echo "CXX=g++" >> $GITHUB_ENV
-      - name: Setup Build
-        env:
-          MATRIX_FIPS: ${{ matrix.fips }}
-          MATRIX_SHARED: ${{ matrix.shared }}
-        run: cmake -G Ninja -B ./build -DCMAKE_BUILD_TYPE=Release -DFIPS="${MATRIX_FIPS}" -DBUILD_SHARED_LIBS="${MATRIX_SHARED}"
-      - name: Build Project
-        run: cmake --build ./build --target all
-      - name: Run tests
-        run: cmake --build ./build --target run_tests
+    - uses: actions/checkout@v7
+    - uses: actions/setup-go@v6
+      with:
+        go-version: ">=1.18"
+    - name: Setup Clang
+      if: startsWith(matrix.compiler, 'clang')
+      run: |
+        echo "CC=clang" >> $GITHUB_ENV
+        echo "CXX=clang++" >> $GITHUB_ENV
+    - name: Setup GCC
+      if: startsWith(matrix.compiler, 'gcc')
+      run: |
+        echo "CC=gcc" >> $GITHUB_ENV
+        echo "CXX=g++" >> $GITHUB_ENV
+    - name: Setup Build
+      env:
+        MATRIX_FIPS: ${{ matrix.fips }}
+        MATRIX_SHARED: ${{ matrix.shared }}
+      run: cmake -G Ninja -B ./build -DCMAKE_BUILD_TYPE=Release -DFIPS="${MATRIX_FIPS}" -DBUILD_SHARED_LIBS="${MATRIX_SHARED}"
+    - name: Build Project
+      run: cmake --build ./build --target all
+    - name: Run tests
+      run: cmake --build ./build --target run_tests
 
   sanitizer-tests:
     name: sanitizer - ${{ matrix.arch.name }} - ${{ matrix.config.name }} [${{ matrix.shard_index }}/${{ matrix.config.total_shards }}]
@@ -238,64 +110,64 @@ jobs:
       fail-fast: false
       matrix:
         arch:
-          - name: x86-64
-            runner: ubuntu-latest
-          - name: aarch64
-            runner: ubuntu-24.04-arm
+        - name: x86-64
+          runner: ubuntu-latest
+        - name: aarch64
+          runner: ubuntu-24.04-arm
         config:
-          - name: asan-noasm
+        - name: asan-noasm
+          sanitizer: asan
+          extra_cmake_args: "-DOPENSSL_NO_ASM=1"
+          total_shards: 1
+        - name: msan-noasm
+          sanitizer: msan
+          extra_cmake_args: "-DOPENSSL_NO_ASM=1"
+          total_shards: 4
+        shard_index: [0, 1, 2, 3]
+        exclude:
+        - config:
+            name: asan-noasm
+        include:
+        - arch:
+            name: x86-64
+            runner: ubuntu-latest
+          config:
+            name: asan-noasm
             sanitizer: asan
             extra_cmake_args: "-DOPENSSL_NO_ASM=1"
             total_shards: 1
-          - name: msan-noasm
-            sanitizer: msan
+          shard_index: 0
+        - arch:
+            name: aarch64
+            runner: ubuntu-24.04-arm
+          config:
+            name: asan-noasm
+            sanitizer: asan
             extra_cmake_args: "-DOPENSSL_NO_ASM=1"
-            total_shards: 4
-        shard_index: [0, 1, 2, 3]
-        exclude:
-          - config:
-              name: asan-noasm
-        include:
-          - arch:
-              name: x86-64
-              runner: ubuntu-latest
-            config:
-              name: asan-noasm
-              sanitizer: asan
-              extra_cmake_args: "-DOPENSSL_NO_ASM=1"
-              total_shards: 1
-            shard_index: 0
-          - arch:
-              name: aarch64
-              runner: ubuntu-24.04-arm
-            config:
-              name: asan-noasm
-              sanitizer: asan
-              extra_cmake_args: "-DOPENSSL_NO_ASM=1"
-              total_shards: 1
-            shard_index: 0
+            total_shards: 1
+          shard_index: 0
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
-        with:
-          go-version: ">=1.18"
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ninja-build
-      - name: Build and Test crypto_test
-        env:
-          GTEST_TOTAL_SHARDS: ${{ matrix.config.total_shards }}
-          GTEST_SHARD_INDEX: ${{ matrix.shard_index }}
-          MATRIX_SANITIZER: ${{ matrix.config.sanitizer }}
-          MATRIX_EXTRA_CMAKE_ARGS: ${{ matrix.config.extra_cmake_args }}
-        run: |
-          ./util/build_and_test.sh --sanitizer "${MATRIX_SANITIZER}" \
-            --test crypto_test --build-target all_tests \
-            -DCMAKE_BUILD_TYPE=Release ${MATRIX_EXTRA_CMAKE_ARGS}
-      - name: Run ssl_test
-        if: matrix.shard_index == 0
-        run: ./build/ssl/ssl_test
+    - uses: actions/checkout@v7
+    - uses: actions/setup-go@v6
+      with:
+        go-version: ">=1.18"
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ninja-build
+    - name: Build and Test crypto_test
+      env:
+        GTEST_TOTAL_SHARDS: ${{ matrix.config.total_shards }}
+        GTEST_SHARD_INDEX: ${{ matrix.shard_index }}
+        MATRIX_SANITIZER: ${{ matrix.config.sanitizer }}
+        MATRIX_EXTRA_CMAKE_ARGS: ${{ matrix.config.extra_cmake_args }}
+      run: |
+        ./util/build_and_test.sh --sanitizer "${MATRIX_SANITIZER}" \
+          --test crypto_test --build-target all_tests \
+          -DCMAKE_BUILD_TYPE=Release ${MATRIX_EXTRA_CMAKE_ARGS}
+    - name: Run ssl_test
+      if: matrix.shard_index == 0
+      run: ./build/ssl/ssl_test
 
   musl-tests:
     name: musl - ${{ matrix.config.arch }}
@@ -308,25 +180,25 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { host: 'ubuntu-latest', arch: 'x86_64' }
-          - { host: 'ubuntu-24.04-arm', arch: 'aarch64' }
+        - {host: 'ubuntu-latest', arch: 'x86_64'}
+        - {host: 'ubuntu-24.04-arm', arch: 'aarch64'}
     runs-on: ${{ matrix.config.host }}
     container:
       image: rust:latest
       options: "--platform linux/${{ (matrix.config.arch == 'aarch64' && 'arm64/v8') || 'amd64'}}"
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
-        with:
-          go-version: ">=1.18"
-      - run: |
-          set -x
-          apt-get update
-          apt-get install -y cmake musl-tools musl-dev ninja-build
-      - name: Setup Build
-        run: cmake -GNinja -B ./build -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DBUILD_TESTING=OFF -DBUILD_LIBSSL=OFF
-      - name: Build Project
-        run: cmake --build ./build --target crypto
+    - uses: actions/checkout@v7
+    - uses: actions/setup-go@v6
+      with:
+        go-version: ">=1.18"
+    - run: |
+        set -x
+        apt-get update
+        apt-get install -y cmake musl-tools musl-dev ninja-build
+    - name: Setup Build
+      run: cmake -GNinja -B ./build -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DBUILD_TESTING=OFF -DBUILD_LIBSSL=OFF
+    - name: Build Project
+      run: cmake --build ./build --target crypto
 
   arm-gcc-tests:
     if: github.repository_owner == 'aws'
@@ -344,28 +216,28 @@ jobs:
         gcc_version: ["9", "10", "11", "12", "13", "14", "15", "16"]
         fips: ["0", "1"]
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
-        with:
-          go-version: ">=1.18"
-      - name: Install build dependencies
-        run: |
-          apt-get update
-          apt-get install -y cmake ninja-build
-      - name: GCC 14 hack
-        if: matrix.gcc_version == '14'
+    - uses: actions/checkout@v7
+    - uses: actions/setup-go@v6
+      with:
+        go-version: ">=1.18"
+    - name: Install build dependencies
+      run: |
+        apt-get update
+        apt-get install -y cmake ninja-build
+    - name: GCC 14 hack
+      if: matrix.gcc_version == '14'
         # Suppress false positive stringop-overflow and array-bounds warnings w/ GCC-14
-        run: |
-          echo "CXXFLAGS=-Wno-stringop-overflow -Wno-array-bounds" >> $GITHUB_ENV
-      - name: Setup ${{ (matrix.fips == 1 && 'FIPS') || 'non-FIPS' }} Build
-        env:
-          MATRIX_FIPS: ${{ matrix.fips }}
-        run: |
-          cmake -G Ninja -B ./build -DCMAKE_BUILD_TYPE=Release -DFIPS="${MATRIX_FIPS}"
-      - name: Build Project
-        run: cmake --build ./build --target all
-      - name: Run tests
-        run: cmake --build ./build --target run_tests
+      run: |
+        echo "CXXFLAGS=-Wno-stringop-overflow -Wno-array-bounds" >> $GITHUB_ENV
+    - name: Setup ${{ (matrix.fips == 1 && 'FIPS') || 'non-FIPS' }} Build
+      env:
+        MATRIX_FIPS: ${{ matrix.fips }}
+      run: |
+        cmake -G Ninja -B ./build -DCMAKE_BUILD_TYPE=Release -DFIPS="${MATRIX_FIPS}"
+    - name: Build Project
+      run: cmake --build ./build --target all
+    - name: Run tests
+      run: cmake --build ./build --target run_tests
 
   arm-clang-2604-tests:
     if: github.repository_owner == 'aws'
@@ -380,26 +252,26 @@ jobs:
         clang_version: ["22"]
         fips: ["0", "1"]
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
-        with:
-          go-version: ">=1.18"
-      - name: Select compiler
-        env:
-          MATRIX_CLANG_VERSION: ${{ matrix.clang_version }}
-        run: |
-          clang-${MATRIX_CLANG_VERSION} --version
-          echo "CC=/usr/bin/clang-${MATRIX_CLANG_VERSION}" >> $GITHUB_ENV
-          echo "CXX=/usr/bin/clang++-${MATRIX_CLANG_VERSION}" >> $GITHUB_ENV
-      - name: Setup ${{ (matrix.fips == 1 && 'FIPS') || 'non-FIPS' }} Build
-        env:
-          MATRIX_FIPS: ${{ matrix.fips }}
-        run: |
-          cmake -G Ninja -B ./build -DCMAKE_BUILD_TYPE=Release -DFIPS="${MATRIX_FIPS}"
-      - name: Build Project
-        run: cmake --build ./build --target all
-      - name: Run tests
-        run: cmake --build ./build --target run_tests
+    - uses: actions/checkout@v7
+    - uses: actions/setup-go@v6
+      with:
+        go-version: ">=1.18"
+    - name: Select compiler
+      env:
+        MATRIX_CLANG_VERSION: ${{ matrix.clang_version }}
+      run: |
+        clang-${MATRIX_CLANG_VERSION} --version
+        echo "CC=/usr/bin/clang-${MATRIX_CLANG_VERSION}" >> $GITHUB_ENV
+        echo "CXX=/usr/bin/clang++-${MATRIX_CLANG_VERSION}" >> $GITHUB_ENV
+    - name: Setup ${{ (matrix.fips == 1 && 'FIPS') || 'non-FIPS' }} Build
+      env:
+        MATRIX_FIPS: ${{ matrix.fips }}
+      run: |
+        cmake -G Ninja -B ./build -DCMAKE_BUILD_TYPE=Release -DFIPS="${MATRIX_FIPS}"
+    - name: Build Project
+      run: cmake --build ./build --target all
+    - name: Run tests
+      run: cmake --build ./build --target run_tests
 
   arm-clang-2404-tests:
     if: github.repository_owner == 'aws'
@@ -418,30 +290,30 @@ jobs:
         fips: ["0", "1"]
         exclude:
           # TODO: Broken FIPS build w/ clang 18
-          - clang_version: "18"
-            fips: "1"
+        - clang_version: "18"
+          fips: "1"
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
-        with:
-          go-version: ">=1.18"
-      - name: Install build dependencies
-        env:
-          MATRIX_CLANG_VERSION: ${{ matrix.clang_version }}
-        run: |
-          apt-get update
-          apt-get install -y build-essential cmake ninja-build "clang-${MATRIX_CLANG_VERSION}"
-          echo "CC=/usr/bin/clang-${MATRIX_CLANG_VERSION}" >> $GITHUB_ENV
-          echo "CXX=/usr/bin/clang++-${MATRIX_CLANG_VERSION}" >> $GITHUB_ENV
-      - name: Setup ${{ (matrix.fips == 1 && 'FIPS') || 'non-FIPS' }} Build
-        env:
-          MATRIX_FIPS: ${{ matrix.fips }}
-        run: |
-          cmake -G Ninja -B ./build -DCMAKE_BUILD_TYPE=Release -DFIPS="${MATRIX_FIPS}"
-      - name: Build Project
-        run: cmake --build ./build --target all
-      - name: Run tests
-        run: cmake --build ./build --target run_tests
+    - uses: actions/checkout@v7
+    - uses: actions/setup-go@v6
+      with:
+        go-version: ">=1.18"
+    - name: Install build dependencies
+      env:
+        MATRIX_CLANG_VERSION: ${{ matrix.clang_version }}
+      run: |
+        apt-get update
+        apt-get install -y build-essential cmake ninja-build "clang-${MATRIX_CLANG_VERSION}"
+        echo "CC=/usr/bin/clang-${MATRIX_CLANG_VERSION}" >> $GITHUB_ENV
+        echo "CXX=/usr/bin/clang++-${MATRIX_CLANG_VERSION}" >> $GITHUB_ENV
+    - name: Setup ${{ (matrix.fips == 1 && 'FIPS') || 'non-FIPS' }} Build
+      env:
+        MATRIX_FIPS: ${{ matrix.fips }}
+      run: |
+        cmake -G Ninja -B ./build -DCMAKE_BUILD_TYPE=Release -DFIPS="${MATRIX_FIPS}"
+    - name: Build Project
+      run: cmake --build ./build --target all
+    - name: Run tests
+      run: cmake --build ./build --target run_tests
 
   arm-clang-2204-tests:
     if: github.repository_owner == 'aws'
@@ -459,27 +331,27 @@ jobs:
         clang_version: ["11", "12", "13"]
         fips: ["0", "1"]
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
-        with:
-          go-version: ">=1.18"
-      - name: Install build dependencies
-        env:
-          MATRIX_CLANG_VERSION: ${{ matrix.clang_version }}
-        run: |
-          apt-get update
-          apt-get install -y build-essential cmake ninja-build "clang-${MATRIX_CLANG_VERSION}"
-          echo "CC=/usr/bin/clang-${MATRIX_CLANG_VERSION}" >> $GITHUB_ENV
-          echo "CXX=/usr/bin/clang++-${MATRIX_CLANG_VERSION}" >> $GITHUB_ENV
-      - name: Setup ${{ (matrix.fips == 1 && 'FIPS') || 'non-FIPS' }} Build
-        env:
-          MATRIX_FIPS: ${{ matrix.fips }}
-        run: |
-          cmake -G Ninja -B ./build -DCMAKE_BUILD_TYPE=Release -DFIPS="${MATRIX_FIPS}"
-      - name: Build Project
-        run: cmake --build ./build --target all
-      - name: Run tests
-        run: cmake --build ./build --target run_tests
+    - uses: actions/checkout@v7
+    - uses: actions/setup-go@v6
+      with:
+        go-version: ">=1.18"
+    - name: Install build dependencies
+      env:
+        MATRIX_CLANG_VERSION: ${{ matrix.clang_version }}
+      run: |
+        apt-get update
+        apt-get install -y build-essential cmake ninja-build "clang-${MATRIX_CLANG_VERSION}"
+        echo "CC=/usr/bin/clang-${MATRIX_CLANG_VERSION}" >> $GITHUB_ENV
+        echo "CXX=/usr/bin/clang++-${MATRIX_CLANG_VERSION}" >> $GITHUB_ENV
+    - name: Setup ${{ (matrix.fips == 1 && 'FIPS') || 'non-FIPS' }} Build
+      env:
+        MATRIX_FIPS: ${{ matrix.fips }}
+      run: |
+        cmake -G Ninja -B ./build -DCMAKE_BUILD_TYPE=Release -DFIPS="${MATRIX_FIPS}"
+    - name: Build Project
+      run: cmake --build ./build --target all
+    - name: Run tests
+      run: cmake --build ./build --target run_tests
 
   arm-clang-2004-tests:
     if: github.repository_owner == 'aws'
@@ -497,27 +369,27 @@ jobs:
         clang_version: ["7", "8", "9", "10"]
         fips: ["0", "1"]
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
-        with:
-          go-version: ">=1.18"
-      - name: Install build dependencies
-        env:
-          MATRIX_CLANG_VERSION: ${{ matrix.clang_version }}
-        run: |
-          apt-get update
-          apt-get install -y build-essential cmake ninja-build "clang-${MATRIX_CLANG_VERSION}"
-          echo "CC=/usr/bin/clang-${MATRIX_CLANG_VERSION}" >> $GITHUB_ENV
-          echo "CXX=/usr/bin/clang++-${MATRIX_CLANG_VERSION}" >> $GITHUB_ENV
-      - name: Setup ${{ (matrix.fips == 1 && 'FIPS') || 'non-FIPS' }} Build
-        env:
-          MATRIX_FIPS: ${{ matrix.fips }}
-        run: |
-          cmake -G Ninja -B ./build -DCMAKE_BUILD_TYPE=Release -DFIPS="${MATRIX_FIPS}"
-      - name: Build Project
-        run: cmake --build ./build --target all
-      - name: Run tests
-        run: cmake --build ./build --target run_tests
+    - uses: actions/checkout@v7
+    - uses: actions/setup-go@v6
+      with:
+        go-version: ">=1.18"
+    - name: Install build dependencies
+      env:
+        MATRIX_CLANG_VERSION: ${{ matrix.clang_version }}
+      run: |
+        apt-get update
+        apt-get install -y build-essential cmake ninja-build "clang-${MATRIX_CLANG_VERSION}"
+        echo "CC=/usr/bin/clang-${MATRIX_CLANG_VERSION}" >> $GITHUB_ENV
+        echo "CXX=/usr/bin/clang++-${MATRIX_CLANG_VERSION}" >> $GITHUB_ENV
+    - name: Setup ${{ (matrix.fips == 1 && 'FIPS') || 'non-FIPS' }} Build
+      env:
+        MATRIX_FIPS: ${{ matrix.fips }}
+      run: |
+        cmake -G Ninja -B ./build -DCMAKE_BUILD_TYPE=Release -DFIPS="${MATRIX_FIPS}"
+    - name: Build Project
+      run: cmake --build ./build --target all
+    - name: Run tests
+      run: cmake --build ./build --target run_tests
 
   gcc-14-hardened:
     if: github.repository_owner == 'aws'
@@ -528,39 +400,39 @@ jobs:
       fail-fast: false
       matrix:
         fips:
-          - "0"
-          - "1"
+        - "0"
+        - "1"
     runs-on: ubuntu-24.04
     container: gcc:14.4
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
-        with:
-          go-version: ">=1.18"
-      - name: Install build deps
+    - uses: actions/checkout@v7
+    - uses: actions/setup-go@v6
+      with:
+        go-version: ">=1.18"
+    - name: Install build deps
         # perl is needed for perlasm in the FIPS build; Go comes from setup-go above.
-        run: |
-          apt-get update
-          apt-get install -y cmake ninja-build perl
-          gcc --version
-          cmake --version
-          go version
-          perl --version
-      - name: Setup CMake
-        uses: threeal/cmake-action@v2.1.0
-        with:
-          generator: Ninja
-          c-compiler: gcc
-          cxx-compiler: g++
-          options: FIPS=${{ matrix.fips }} CMAKE_BUILD_TYPE=Release
-      - name: Build Project
+      run: |
+        apt-get update
+        apt-get install -y cmake ninja-build perl
+        gcc --version
+        cmake --version
+        go version
+        perl --version
+    - name: Setup CMake
+      uses: threeal/cmake-action@v2.1.0
+      with:
+        generator: Ninja
+        c-compiler: gcc
+        cxx-compiler: g++
+        options: FIPS=${{ matrix.fips }} CMAKE_BUILD_TYPE=Release
+    - name: Build Project
         # Keep -Whardened config noise (e.g. jitterentropy's -O0 compiles disabling
         # _FORTIFY_SOURCE) from becoming fatal under the project's blanket -Werror.
-        run: |
-          cmake -DCMAKE_C_FLAGS='-O2 -fhardened -Wno-error=hardened' -S. -Bbuild
-          cmake --build ./build --target all
-      - name: Run tests
-        run: cmake --build ./build --target run_tests
+      run: |
+        cmake -DCMAKE_C_FLAGS='-O2 -fhardened -Wno-error=hardened' -S. -Bbuild
+        cmake --build ./build --target all
+    - name: Run tests
+      run: cmake --build ./build --target run_tests
 
   pedantic-tests:
     name: pedantic - ${{ matrix.compiler }}, FIPS=${{ matrix.fips }}
@@ -572,38 +444,38 @@ jobs:
       matrix:
         fips: [0, 1]
         compiler:
-          - "gcc15"
-          - "gcc16"
-          - "clang21"
-          - "clang22"
+        - "gcc15"
+        - "gcc16"
+        - "clang21"
+        - "clang22"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/mattkretz/cplusplus-ci/${{ matrix.compiler }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
-        with:
-          go-version: ">=1.18"
-      - name: Setup Clang
-        if: startsWith(matrix.compiler, 'clang')
-        run: |
-          echo "CC=clang" >> $GITHUB_ENV
-          echo "CXX=clang++" >> $GITHUB_ENV
-      - name: Setup GCC
-        if: startsWith(matrix.compiler, 'gcc')
-        run: |
-          echo "CC=gcc" >> $GITHUB_ENV
-          echo "CXX=g++" >> $GITHUB_ENV
-      - name: Setup Build
-        if: matrix.fips == 0
-        run: cmake -G Ninja -B ./build -DCMAKE_BUILD_TYPE=Release CMAKE_C_FLAGS=-pedantic CMAKE_CXX_FLAGS=-pedantic
-      - name: Setup FIPS Build
-        if: matrix.fips == 1
-        run: cmake -G Ninja -B ./build  -DCMAKE_BUILD_TYPE=Release -DFIPS=1 CMAKE_C_FLAGS=-pedantic CMAKE_CXX_FLAGS=-pedantic
-      - name: Build Project
-        run: cmake --build ./build --target all
-      - name: Run tests
-        run: cmake --build ./build --target run_tests
+    - uses: actions/checkout@v7
+    - uses: actions/setup-go@v6
+      with:
+        go-version: ">=1.18"
+    - name: Setup Clang
+      if: startsWith(matrix.compiler, 'clang')
+      run: |
+        echo "CC=clang" >> $GITHUB_ENV
+        echo "CXX=clang++" >> $GITHUB_ENV
+    - name: Setup GCC
+      if: startsWith(matrix.compiler, 'gcc')
+      run: |
+        echo "CC=gcc" >> $GITHUB_ENV
+        echo "CXX=g++" >> $GITHUB_ENV
+    - name: Setup Build
+      if: matrix.fips == 0
+      run: cmake -G Ninja -B ./build -DCMAKE_BUILD_TYPE=Release CMAKE_C_FLAGS=-pedantic CMAKE_CXX_FLAGS=-pedantic
+    - name: Setup FIPS Build
+      if: matrix.fips == 1
+      run: cmake -G Ninja -B ./build  -DCMAKE_BUILD_TYPE=Release -DFIPS=1 CMAKE_C_FLAGS=-pedantic CMAKE_CXX_FLAGS=-pedantic
+    - name: Build Project
+      run: cmake --build ./build --target all
+    - name: Run tests
+      run: cmake --build ./build --target run_tests
 
   gcc-4_8:
     needs: [sanity-test-run]
@@ -611,47 +483,39 @@ jobs:
     env:
       DOCKER_BUILDKIT: 1
     steps:
-      - uses: actions/checkout@v7
-      - name: Build Docker Image
-        working-directory: .github/docker_images/gcc-4.8
-        run: |
-          docker build -t "gcc-4.8"  .
-      - name: Build using pre-generated assembly
-        run: |
-          docker run -v "${GITHUB_WORKSPACE}:/awslc" "gcc-4.8"
+    - uses: actions/checkout@v7
+    - name: Build Docker Image
+      working-directory: .github/docker_images/gcc-4.8
+      run: |
+        docker build -t "gcc-4.8"  .
+    - name: Build using pre-generated assembly
+      run: |
+        docker run -v "${GITHUB_WORKSPACE}:/awslc" "gcc-4.8"
 
   alpine-linux-x86:
     needs: [sanity-test-run]
     strategy:
       fail-fast: false
       matrix:
-        tests:
-          [
-            /awslc/tests/ci/run_fips_tests.sh,
-            /awslc/tests/ci/run_posix_tests.sh,
-          ]
-        compiler:
-          [
-            --build-arg CC=clang --build-arg CXX=clang++,
-            --build-arg CC=gcc --build-arg CXX=g++,
-          ]
+        tests: [/awslc/tests/ci/run_fips_tests.sh, /awslc/tests/ci/run_posix_tests.sh]
+        compiler: [--build-arg CC=clang --build-arg CXX=clang++, --build-arg CC=gcc --build-arg CXX=g++]
     runs-on: ubuntu-latest
     env:
       DOCKER_BUILDKIT: 1
     steps:
-      - uses: actions/checkout@v7
-      - name: Build Docker Image
-        working-directory: .github/docker_images/alpine-linux
-        env:
-          MATRIX_COMPILER: ${{ matrix.compiler }}
-        run: |
-          docker build -t alpine_linux ${MATRIX_COMPILER} .
-      - name: Run tests
-        env:
-          MATRIX_TESTS: ${{ matrix.tests }}
-        run: |
-          docker run -v "${GITHUB_WORKSPACE}:/awslc" \
-          alpine_linux "${MATRIX_TESTS}"
+    - uses: actions/checkout@v7
+    - name: Build Docker Image
+      working-directory: .github/docker_images/alpine-linux
+      env:
+        MATRIX_COMPILER: ${{ matrix.compiler }}
+      run: |
+        docker build -t alpine_linux ${MATRIX_COMPILER} .
+    - name: Run tests
+      env:
+        MATRIX_TESTS: ${{ matrix.tests }}
+      run: |
+        docker run -v "${GITHUB_WORKSPACE}:/awslc" \
+        alpine_linux "${MATRIX_TESTS}"
 
     # TODO: Investigate sudden hanging tests and failures in GHA runners (P114059413)
   #  MSVC-SDE-32-bit:
