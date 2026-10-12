@@ -1,11 +1,10 @@
 name: integration-omnibus
 on:
+  workflow_dispatch:
   push:
     branches: ['main', 'fips-*']
   pull_request:
     branches: [ '*' ]
-  schedule:
-    - cron: "0 0 * * *"
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
   cancel-in-progress: true

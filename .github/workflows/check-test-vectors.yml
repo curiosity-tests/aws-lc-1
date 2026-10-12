@@ -1,8 +1,5 @@
 name: Check Test Vectors
 on:
-  schedule:
-    # Run weekly on Wednesdays at 10 AM PT (6 PM UTC)
-    - cron: "0 18 * * 3"
   workflow_dispatch: # Allow manual triggering
 
 permissions:
